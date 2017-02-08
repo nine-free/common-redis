@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="poolConfig" class="org.apache.commons.pool2.impl.GenericObjectPoolConfig">
+        <property name="maxTotal" value="${redis.maxTotal}"/>
+        <property name="minIdle" value="${redis.minIdle}"/>
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <property name="lifo" value="true"/>
+        <property name="maxWaitMillis" value="-1"/>
+        <property name="minEvictableIdleTimeMillis" value="60000"/>
+        <property name="numTestsPerEvictionRun" value="-1"/>
+        <property name="testOnBorrow" value="true"/>
+        <property name="testOnReturn" value="false"/>
+        <property name="testWhileIdle" value="false"/>
+        <property name="timeBetweenEvictionRunsMillis" value="30000"/>
+        <property name="blockWhenExhausted" value="true"/>
+        <property name="jmxEnabled" value="false"/>
+    </bean>
+
+    <bean id="jedisPool" class="redis.clients.jedis.JedisSentinelPool" destroy-method="destroy">
+        <constructor-arg name="masterName" value="${redis.sentinel.masterName}"/>
+        <constructor-arg name="sentinels">
+            <bean class="org.springframework.util.StringUtils"
+                  factory-method="commaDelimitedListToSet">
+                <constructor-arg value="${redis.sentinels}"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg name="poolConfig" ref="poolConfig"/>
+        <constructor-arg name="timeout" value="${redis.timeout}"/>
+        <constructor-arg name="password" value="${redis.password}"/>
+        <constructor-arg name="database" value="${redis.defaultDatabase}"/>
+    </bean>
+
+    <bean id="redisService" class="com.soft1010.common.redis.impl.RedisServiceImpl">
+        <constructor-arg name="jedisPool" ref="jedisPool"></constructor-arg>
+    </bean>
+
+    <!--&lt;!&ndash; 指定spring注解注入层 &ndash;&gt;-->
+    <!--<context:component-scan base-package="com.lemall.crd.common.redis"/>-->
+</beans>
